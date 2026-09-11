@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
+	"strconv"
 	"encoding/json"
 
 	"github.com/mrDisa/Raspy/backend/internal/model"
@@ -21,7 +21,7 @@ func NewClient(baseURL string) *Client {
         httpClient: &http.Client {
 			Timeout: 5 * time.Second,
 		},
-        baseURL:    baseURL,
+        baseURL: baseURL,
     }
 }
 
@@ -38,17 +38,17 @@ func (c *Client) GetSchedule(group string, startDate *time.Time) ([]model.Schedu
 
 	req, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create request: %w", err)
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot get response: %w", err)
+		return nil, fmt.Errorf("cannot get response: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("api returned status: %d", resp.StatusCode)
 	}
 
 	fmt.Printf("URL: %s, Status response: %d", fullURL, resp.StatusCode)
@@ -56,7 +56,7 @@ func (c *Client) GetSchedule(group string, startDate *time.Time) ([]model.Schedu
 	var schedule []model.ScheduleDay
 	decoder := json.NewDecoder(resp.Body)
 	if err := decoder.Decode(&schedule); err != nil {
-		return nil, fmt.Errorf("Error decoding response: %w", err)
+		return nil, fmt.Errorf("error decoding response: %w", err)
 	}
 
 	return schedule, nil
