@@ -12,16 +12,16 @@ type ScheduleProvider interface {
 }
 
 type ScheduleService struct {
-    provider ScheduleProvider
+	provider ScheduleProvider
 }
 
 func NewScheduleService(provider ScheduleProvider) *ScheduleService {
-    return &ScheduleService{
+	return &ScheduleService{
 		provider: provider,
 	}
 }
 
-func (s *ScheduleService) getFilteredSchedule(group string, subgroup model.Subgroup,  startDate *time.Time) ([]model.ScheduleDay, error) {
+func (s *ScheduleService) getFilteredSchedule(group string, subgroup model.Subgroup, startDate *time.Time) ([]model.ScheduleDay, error) {
 	schedule, err := s.provider.GetSchedule(group, startDate)
 	if err != nil {
 		return []model.ScheduleDay{}, fmt.Errorf("failed to get schedule: %w", err)
@@ -44,7 +44,7 @@ func (s *ScheduleService) getScheduleForDate(group string, subgroup model.Subgro
 			return day, nil
 		}
 	}
-	return  model.ScheduleDay{}, fmt.Errorf("schedule for %s not found", targetDate)
+	return model.ScheduleDay{}, fmt.Errorf("schedule for %s not found", targetDate)
 }
 
 func (s *ScheduleService) GetTodaySchedule(group string, subgroup model.Subgroup) (model.ScheduleDay, error) {
@@ -70,5 +70,5 @@ func (s *ScheduleService) GetNextWeekSchedule(group string, subgroup model.Subgr
 	date := time.Date(rawDate.Year(), rawDate.Month(), rawDate.Day(), 0, 0, 0, 0, loc)
 
 	fmt.Println(date)
-	return s.getFilteredSchedule(group,subgroup, &date)
+	return s.getFilteredSchedule(group, subgroup, &date)
 }

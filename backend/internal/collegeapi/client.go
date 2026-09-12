@@ -1,34 +1,34 @@
 package collegeapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
-	"time"
 	"strconv"
-	"encoding/json"
+	"time"
 
 	"github.com/mrDisa/Raspy/backend/internal/model"
 )
 
 type Client struct {
 	httpClient *http.Client
-	baseURL string
+	baseURL    string
 }
 
 func NewClient(baseURL string) *Client {
-    return &Client{
-        httpClient: &http.Client {
+	return &Client{
+		httpClient: &http.Client{
 			Timeout: 5 * time.Second,
 		},
-        baseURL: baseURL,
-    }
+		baseURL: baseURL,
+	}
 }
 
 func (c *Client) GetSchedule(group string, startDate *time.Time) ([]model.ScheduleDay, error) {
 	params := url.Values{}
 	params.Set("group", group)
-	
+
 	if startDate != nil {
 		timestamp := startDate.Unix()
 		params.Set("start_date", strconv.FormatInt(timestamp, 10))
@@ -40,7 +40,7 @@ func (c *Client) GetSchedule(group string, startDate *time.Time) ([]model.Schedu
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get response: %w", err)
