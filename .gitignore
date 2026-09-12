@@ -1,0 +1,23 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/backend/bin/
+/backend/tmp/
+ 
+# Env files
+.env
+.env.local
+ 
+# IDE
+.vscode/
+.idea/
+*.swp
+ 
+# OS
+.DS_Store
+Thumbs.db

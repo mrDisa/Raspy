@@ -5,11 +5,12 @@ services:
     environment:
       POSTGRES_DB: raspy
       POSTGRES_USER: raspy
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: raspy_dev_password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/db/init:/docker-entrypoint-initdb.d
  
 volumes:
   postgres_data:
