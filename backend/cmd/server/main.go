@@ -11,7 +11,8 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	
+
+	"github.com/go-chi/cors"
 	"github.com/go-chi/chi/v5"
 
 	"github.com/mrDisa/Raspy/backend/internal/auth"
@@ -57,6 +58,8 @@ func main() {
 		log.Fatal("BOT_TOKEN is not set")
 	}
 
+	devMode := os.Getenv("DEV_MODE") == "true"
+
 	db, err := openDB(databaseURL)
 	if err != nil {
 		log.Fatal(err)
@@ -91,10 +94,20 @@ func main() {
 
 	r := chi.NewRouter()
 
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "PUT", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Telegram-Init-Data"},
+	}))
+
 	r.Get("/health", handler.Health)
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Use(auth.Middleware(userRepo, botToken))
+		if devMode {
+			r.Use(auth.DevMiddleware(userRepo))
+		} else {
+			r.Use(auth.Middleware(userRepo, botToken))
+		}
 
 		r.Get("/me", handler.Me)
 
