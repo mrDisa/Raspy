@@ -8,3 +8,11 @@ export async function getTodaySchedule(): Promise<ScheduleDay> {
 export async function getTomorrowSchedule(): Promise<ScheduleDay> {
   return apiRequest<ScheduleDay>("/api/v1/schedule/tomorrow");
 }
+
+export async function getWeekSchedule(): Promise<ScheduleDay[]> {
+  return apiRequest<ScheduleDay[]>("/api/v1/schedule/week");
+}
+
+export async function getNextWeekSchedule(): Promise<ScheduleDay[]> {
+  return apiRequest<ScheduleDay[]>("/api/v1/schedule/week/next");
+}

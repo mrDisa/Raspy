@@ -77,22 +77,46 @@ func (s *ScheduleService) GetTomorrowSchedule(group string, subgroup model.Subgr
 	return s.getScheduleForDate(group, subgroup, now.AddDate(0, 0, 1))
 }
 
-func (s *ScheduleService) GetNextWeekSchedule(group string, subgroup model.Subgroup) ([]model.ScheduleDay, error) {
-	weekday := int(time.Now().Weekday())
-	if weekday == 0 {
-		weekday = 7
-	}
-	daysUntilNextMonday := 8 - weekday
-	rawDate := time.Now().AddDate(0, 0, daysUntilNextMonday)
-
-	loc, err := time.LoadLocation(("Europe/Moscow"))
+func (s *ScheduleService) GetWeekSchedule(
+	group string,
+	subgroup model.Subgroup,
+	weekOffset int,
+) ([]model.ScheduleDay, error) {
+	loc, err := time.LoadLocation("Europe/Moscow")
 	if err != nil {
 		return nil, fmt.Errorf("failed to load timezone: %w", err)
 	}
 
-	date := time.Date(rawDate.Year(), rawDate.Month(), rawDate.Day(), 0, 0, 0, 0, loc)
+	now := time.Now().In(loc)
 
-	fmt.Println(date)
-	return s.getFilteredSchedule(group, subgroup, &date)
+	weekday := int(now.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+
+	monday := now.AddDate(0, 0, -(weekday - 1))
+
+	targetMonday := monday.AddDate(
+		0,
+		0,
+		weekOffset*7,
+	)
+
+	startDate := time.Date(
+		targetMonday.Year(),
+		targetMonday.Month(),
+		targetMonday.Day(),
+		0,
+		0,
+		0,
+		0,
+		loc,
+	)
+
+	return s.getFilteredSchedule(
+		group,
+		subgroup,
+		&startDate,
+	)
 }
 

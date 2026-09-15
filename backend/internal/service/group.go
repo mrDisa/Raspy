@@ -24,10 +24,10 @@ func NewGroupService(
 	}
 }
 
-func (s *GroupService) GetGroups(ctx context.Context) ([]model.Group, error) {
-	groups, err := s.collegeClient.GetGroups()
+func (s *GroupService) GetGroups(ctx context.Context, query string) ([]model.Group, error) {
+	groups, err := s.collegeClient.GetGroups(query)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get groups from college api: %w", err)
+		return nil, err
 	}
 
 	result := make([]model.Group, 0, len(groups))
@@ -39,7 +39,7 @@ func (s *GroupService) GetGroups(ctx context.Context) ([]model.Group, error) {
 			group.Text,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to save group: %w", err)
+			return nil, fmt.Errorf("failed to upsert group %s: %w", group.ID, err)
 		}
 
 		result = append(result, *dbGroup)

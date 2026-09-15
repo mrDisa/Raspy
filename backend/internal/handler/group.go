@@ -18,24 +18,18 @@ func NewGroupHandler(groupService *service.GroupService) *GroupHandler {
 }
 
 func (h *GroupHandler) List(w http.ResponseWriter, r *http.Request) {
-	groups, err := h.groupService.GetGroups(r.Context())
+	query := r.URL.Query().Get("q")
+
+	groups, err := h.groupService.GetGroups(r.Context(), query)
 	if err != nil {
-		http.Error(
-			w,
-			"failed to get groups",
-			http.StatusInternalServerError,
-		)
+		http.Error(w, "failed to get groups", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(groups); err != nil {
-		http.Error(
-			w,
-			"failed to encode response",
-			http.StatusInternalServerError,
-		)
+		http.Error(w, "failed to encode response", http.StatusInternalServerError)
 		return
 	}
 }

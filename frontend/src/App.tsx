@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 
-import { getMe } from "./api/user";
+import { getMe, updateGroup } from "./api/user";
 import type { User } from "./types/api";
+
+import SelectGroup from "./pages/SelectGroup/SelectGroup";
+import Schedule from "./pages/Schedule/Schedule";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -11,13 +14,11 @@ function App() {
   useEffect(() => {
     async function loadUser() {
       try {
-        const currentUser = await getMe();
-        setUser(currentUser);
+        const data = await getMe();
+        setUser(data);
       } catch (err) {
         setError(
-          err instanceof Error
-            ? err.message
-            : "Unknown error",
+          err instanceof Error ? err.message : "Не удалось загрузить пользователя",
         );
       } finally {
         setLoading(false);
@@ -27,33 +28,31 @@ function App() {
     loadUser();
   }, []);
 
+  async function handleGroupSelect(groupId: number, subgroup: number) {
+    const updatedUser = await updateGroup(groupId, subgroup);
+    setUser(updatedUser);
+  }
+
   if (loading) {
-    return <div>Загрузка...</div>;
+    return <div className="app-state">Загрузка...</div>;
   }
 
   if (error) {
-    return <div>Ошибка: {error}</div>;
+    return <div className="app-state error">{error}</div>;
   }
 
   if (!user) {
-    return <div>Пользователь не найден</div>;
+    return null;
   }
 
   return (
-    <div>
-      <h1>Raspy</h1>
-
-      <p>Telegram ID: {user.TelegramID}</p>
-
-      <p>
-        Группа:{" "}
-        {user.GroupID === null
-          ? "Не выбрана"
-          : user.GroupID}
-      </p>
-
-      <p>Подгруппа: {user.Subgroup}</p>
-    </div>
+    <main className="app">
+      {user.GroupID === null ? (
+        <SelectGroup onSelect={handleGroupSelect} />
+      ) : (
+        <Schedule user={user} />
+      )}
+    </main>
   );
 }
 

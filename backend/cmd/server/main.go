@@ -118,6 +118,8 @@ func main() {
 		r.Route("/schedule", func(r chi.Router) {
 			r.Get("/today", scheduleHandler.Today)
 			r.Get("/tomorrow", scheduleHandler.Tomorrow)
+			r.Get("/week", scheduleHandler.Week)
+			r.Get("/week/next", scheduleHandler.NextWeek)
 		})
 	})
 

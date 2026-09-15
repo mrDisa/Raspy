@@ -110,3 +110,71 @@ func (h *ScheduleHandler) getSchedule(w http.ResponseWriter, r *http.Request, da
 		return
 	}
 }
+
+func (h *ScheduleHandler) getWeekSchedule(w http.ResponseWriter, r *http.Request, weekOffset int,) {
+	user, ok := auth.UserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "user not found", http.StatusUnauthorized)
+		return
+	}
+
+	if user.GroupID == nil {
+		http.Error(w, "group is not selected", http.StatusBadRequest)
+		return
+	}
+
+	group, err := h.groupRepo.FindByID(
+		r.Context(),
+		*user.GroupID,
+	)
+	if err != nil {
+		http.Error(
+			w,
+			"failed to get group",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	if group == nil {
+		http.Error(
+			w,
+			"group not found",
+			http.StatusNotFound,
+		)
+		return
+	}
+
+	schedule, err := h.scheduleService.GetWeekSchedule(
+		group.ExternalID,
+		user.Subgroup,
+		weekOffset,
+	)
+	if err != nil {
+		http.Error(
+			w,
+			"failed to get schedule",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(schedule); err != nil {
+		http.Error(
+			w,
+			"failed to encode response",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+}
+
+func (h *ScheduleHandler) Week(w http.ResponseWriter, r *http.Request) {
+	h.getWeekSchedule(w, r, 0)
+}
+
+func (h *ScheduleHandler) NextWeek(w http.ResponseWriter, r *http.Request) {
+	h.getWeekSchedule(w, r, 1)
+}
