@@ -77,6 +77,7 @@ func main() {
 	// Services
 
 	scheduleService := service.NewScheduleService(collegeClient)
+	groupService := service.NewGroupService(collegeClient, groupRepo)
 
 	// Handlers
 
@@ -84,6 +85,7 @@ func main() {
 		scheduleService,
 		groupRepo,
 	)
+	groupHandler := handler.NewGroupHandler(groupService)
 
 	// Router
 
@@ -95,6 +97,10 @@ func main() {
 		r.Use(auth.Middleware(userRepo, botToken))
 
 		r.Get("/me", handler.Me)
+
+		r.Get("/groups", groupHandler.List)
+
+		r.Put("/me/group", handler.UpdateGroup(userRepo, groupRepo))
 
 		r.Route("/schedule", func(r chi.Router) {
 			r.Get("/today", scheduleHandler.Today)

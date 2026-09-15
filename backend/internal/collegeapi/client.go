@@ -11,6 +11,8 @@ import (
 	"github.com/mrDisa/Raspy/backend/internal/model"
 )
 
+const groupsURL = "https://api.stavmk.ru/filter/groups/active-lib-scheule-group-name?data="
+
 type Client struct {
 	httpClient *http.Client
 	baseURL    string
@@ -60,4 +62,30 @@ func (c *Client) GetSchedule(group string, startDate *time.Time) ([]model.Schedu
 	}
 
 	return schedule, nil
+}
+
+func (c *Client) GetGroups() ([]Group, error) {
+	req, err := http.NewRequest("GET", groupsURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get response: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api returned status: %d", resp.StatusCode)
+	}
+
+	var result groupsResponse
+
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(&result); err != nil {
+		return nil, fmt.Errorf("error decoding groups response: %w", err)
+	}
+
+	return result.Results, nil
 }
