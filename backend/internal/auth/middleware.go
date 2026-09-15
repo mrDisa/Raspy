@@ -33,7 +33,7 @@ func Middleware(userRepo *repository.UserRepository, botToken string) func(http.
 				return
 			}
 
-			user, err := userRepo.FindByTelegramID(tgUser.ID)
+			user, err := userRepo.FindByTelegramID(r.Context(),tgUser.ID)
 			if err != nil {
 				http.Error(w, "internal error", http.StatusInternalServerError)
 				return

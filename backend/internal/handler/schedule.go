@@ -44,14 +44,25 @@ func (h *ScheduleHandler) getSchedule(w http.ResponseWriter, r *http.Request, da
 		return
 	}
 
-	group, err := h.groupRepo.FindByID(r.Context(), *user.GroupID)
+	group, err := h.groupRepo.FindByID(
+		r.Context(),
+		*user.GroupID,
+	)
 	if err != nil {
-		http.Error(w, "failed to get group", http.StatusInternalServerError)
+		http.Error(
+			w,
+			"failed to get group",
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
 	if group == nil {
-		http.Error(w, "group not found", http.StatusNotFound)
+		http.Error(
+			w,
+			"group not found",
+			http.StatusNotFound,
+		)
 		return
 	}
 
@@ -69,17 +80,33 @@ func (h *ScheduleHandler) getSchedule(w http.ResponseWriter, r *http.Request, da
 			group.ExternalID,
 			user.Subgroup,
 		)
+
+	default:
+		http.Error(
+			w,
+			"invalid schedule day",
+			http.StatusBadRequest,
+		)
+		return
 	}
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(
+			w,
+			"failed to get schedule",
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(schedule); err != nil {
-		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+		http.Error(
+			w,
+			"failed to encode response",
+			http.StatusInternalServerError,
+		)
 		return
 	}
 }

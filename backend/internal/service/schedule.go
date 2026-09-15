@@ -21,6 +21,19 @@ func NewScheduleService(provider ScheduleProvider) *ScheduleService {
 	}
 }
 
+func moscowNow() (time.Time, error) {
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		return time.Time{}, fmt.Errorf(
+			"failed to load timezone: %w",
+			err,
+		)
+	}
+
+	return time.Now().In(loc), nil
+}
+
+
 func (s *ScheduleService) getFilteredSchedule(group string, subgroup model.Subgroup, startDate *time.Time) ([]model.ScheduleDay, error) {
 	schedule, err := s.provider.GetSchedule(group, startDate)
 	if err != nil {
@@ -48,10 +61,20 @@ func (s *ScheduleService) getScheduleForDate(group string, subgroup model.Subgro
 }
 
 func (s *ScheduleService) GetTodaySchedule(group string, subgroup model.Subgroup) (model.ScheduleDay, error) {
-	return s.getScheduleForDate(group, subgroup, time.Now())
+	now, err := moscowNow()
+	if err != nil {
+		return model.ScheduleDay{}, err
+	}
+
+	return s.getScheduleForDate(group, subgroup, now)
 }
 func (s *ScheduleService) GetTomorrowSchedule(group string, subgroup model.Subgroup) (model.ScheduleDay, error) {
-	return s.getScheduleForDate(group, subgroup, time.Now().AddDate(0, 0, 1))
+	now, err := moscowNow()
+	if err != nil {
+		return model.ScheduleDay{}, err
+	}
+
+	return s.getScheduleForDate(group, subgroup, now.AddDate(0, 0, 1))
 }
 
 func (s *ScheduleService) GetNextWeekSchedule(group string, subgroup model.Subgroup) ([]model.ScheduleDay, error) {
@@ -72,3 +95,4 @@ func (s *ScheduleService) GetNextWeekSchedule(group string, subgroup model.Subgr
 	fmt.Println(date)
 	return s.getFilteredSchedule(group, subgroup, &date)
 }
+

@@ -20,7 +20,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	}
 }
 
-func (r *UserRepository) FindByTelegramID(telegramID int64) (*model.User, error) {
+func (r *UserRepository) FindByTelegramID(ctx context.Context, telegramID int64) (*model.User, error) {
 	const query = `
 		SELECT id, telegram_id, group_id, subgroup,
 		       notifications_enabled, created_at, updated_at
