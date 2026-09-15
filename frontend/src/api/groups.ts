@@ -10,3 +10,11 @@ export async function getGroups(query: string): Promise<Group[]> {
     `/api/v1/groups?${params.toString()}`,
   );
 }
+
+export async function getGroup(
+  id: number,
+): Promise<Group> {
+  return apiRequest<Group>(
+    `/api/v1/groups/${id}`,
+  );
+}

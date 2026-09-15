@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { getMe, updateGroup } from "./api/user";
+import { getMe } from "./api/user";
 import type { User } from "./types/api";
 
-import SelectGroup from "./pages/SelectGroup/SelectGroup";
 import Schedule from "./pages/Schedule/Schedule";
 
 function App() {
@@ -14,11 +13,17 @@ function App() {
   useEffect(() => {
     async function loadUser() {
       try {
+        setLoading(true);
+        setError(null);
+
         const data = await getMe();
+
         setUser(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Не удалось загрузить пользователя",
+          err instanceof Error
+            ? err.message
+            : "Не удалось загрузить пользователя",
         );
       } finally {
         setLoading(false);
@@ -28,32 +33,38 @@ function App() {
     loadUser();
   }, []);
 
-  async function handleGroupSelect(groupId: number, subgroup: number) {
-    const updatedUser = await updateGroup(groupId, subgroup);
-    setUser(updatedUser);
-  }
-
   if (loading) {
-    return <div className="app-state">Загрузка...</div>;
+    return (
+      <div className="list-state">
+        Загружаем...
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="app-state error">{error}</div>;
+    return (
+      <div className="form-error">
+        {error}
+      </div>
+    );
   }
 
   if (!user) {
-    return null;
+    return (
+      <div className="form-error">
+        Пользователь не найден
+      </div>
+    );
   }
 
   return (
-    <main className="app">
-      {user.GroupID === null ? (
-        <SelectGroup onSelect={handleGroupSelect} />
-      ) : (
-        <Schedule user={user} />
-      )}
-    </main>
-  );
+  <div className="app">
+    <Schedule
+      user={user}
+      onUserUpdate={setUser}
+    />
+  </div>
+);
 }
 
 export default App;

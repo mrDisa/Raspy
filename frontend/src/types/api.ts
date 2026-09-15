@@ -2,6 +2,7 @@ export interface User {
   ID: number;
   TelegramID: number;
   GroupID: number | null;
+  Group: Group | null;
   Subgroup: number;
   NotificationsEnabled: boolean;
   CreatedAt: string;

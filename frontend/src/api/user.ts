@@ -17,3 +17,17 @@ export async function updateGroup(
     }),
   });
 }
+
+export async function updateNotifications(
+  enabled: boolean,
+): Promise<User> {
+  return apiRequest<User>(
+    "/api/v1/me/notifications",
+    {
+      method: "PUT",
+      body: JSON.stringify({
+        enabled,
+      }),
+    },
+  );
+}

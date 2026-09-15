@@ -1,22 +1,39 @@
 import WeekSchedule from "../WeekSchedule/WeekSchedule";
+import Settings from "../Settings/Settings";
 
 import { useEffect, useMemo, useState } from "react";
 
-import { getTodaySchedule, getTomorrowSchedule } from "../../api/schedule";
-import type { ScheduleDay, User, Lesson } from "../../types/api";
+import {
+  getTodaySchedule,
+  getTomorrowSchedule,
+} from "../../api/schedule";
+
+import type {
+  ScheduleDay,
+  User,
+  Lesson,
+} from "../../types/api";
 
 interface ScheduleProps {
   user: User;
+  onUserUpdate: (user: User) => void;
 }
 
 type Day = "today" | "tomorrow";
 
-function Schedule({ user }: ScheduleProps) {
+function Schedule({
+  user,
+  onUserUpdate,
+}: ScheduleProps) {
   const [day, setDay] = useState<Day>("today");
-  const [schedule, setSchedule] = useState<ScheduleDay | null>(null);
+  const [schedule, setSchedule] =
+    useState<ScheduleDay | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] =
+    useState<string | null>(null);
   const [showWeek, setShowWeek] = useState(false);
+  const [showSettings, setShowSettings] =
+    useState(false);
 
   useEffect(() => {
     async function loadSchedule() {
@@ -42,14 +59,18 @@ function Schedule({ user }: ScheduleProps) {
     }
 
     loadSchedule();
-  }, [day]);
+  }, [day, user.Subgroup, user.GroupID]);
 
   const currentLesson = useMemo(() => {
     if (day !== "today" || !schedule) {
       return null;
     }
 
-    return schedule.list.find((lesson) => isLessonCurrent(lesson)) ?? null;
+    return (
+      schedule.list.find((lesson) =>
+        isLessonCurrent(lesson),
+      ) ?? null
+    );
   }, [day, schedule]);
 
   const nextLesson = useMemo(() => {
@@ -58,23 +79,41 @@ function Schedule({ user }: ScheduleProps) {
     }
 
     return (
-      schedule.list.find((lesson) => isLessonUpcoming(lesson)) ?? null
+      schedule.list.find((lesson) =>
+        isLessonUpcoming(lesson),
+      ) ?? null
     );
   }, [day, schedule]);
 
   const lessonsFinished = useMemo(() => {
-    if (day !== "today" || !schedule || schedule.list.length === 0) {
+    if (
+      day !== "today" ||
+      !schedule ||
+      schedule.list.length === 0
+    ) {
       return false;
     }
 
-    return schedule.list.every((lesson) => isLessonFinished(lesson));
+    return schedule.list.every((lesson) =>
+      isLessonFinished(lesson),
+    );
   }, [day, schedule]);
+
+  if (showSettings) {
+    return (
+      <Settings
+        user={user}
+        onBack={() => setShowSettings(false)}
+        onUserUpdate={onUserUpdate}
+      />
+    );
+  }
 
   if (showWeek) {
     return (
-        <WeekSchedule
+      <WeekSchedule
         onBack={() => setShowWeek(false)}
-        />
+      />
     );
   }
 
@@ -82,29 +121,41 @@ function Schedule({ user }: ScheduleProps) {
     <section className="schedule-page">
       <header className="schedule-top">
         <div>
-          <div className="schedule-brand">Raspy</div>
+          <div className="schedule-brand">
+            Raspy
+          </div>
 
           <div className="schedule-group">
-            Группа #{user.GroupID} ·{" "}
+            {user.Group?.Name ?? "Группа не выбрана"}{" "}
+            ·{" "}
             {user.Subgroup === 0
               ? "без подгруппы"
               : `${user.Subgroup}-я подгруппа`}
           </div>
         </div>
 
-        <button className="settings-button">⚙</button>
+        <button
+          className="settings-button"
+          onClick={() => setShowSettings(true)}
+        >
+          ⚙
+        </button>
       </header>
 
       <div className="day-switcher">
         <button
-          className={day === "today" ? "active" : ""}
+          className={
+            day === "today" ? "active" : ""
+          }
           onClick={() => setDay("today")}
         >
           Сегодня
         </button>
 
         <button
-          className={day === "tomorrow" ? "active" : ""}
+          className={
+            day === "tomorrow" ? "active" : ""
+          }
           onClick={() => setDay("tomorrow")}
         >
           Завтра
@@ -113,7 +164,9 @@ function Schedule({ user }: ScheduleProps) {
 
       <div className="schedule-heading">
         <span className="eyebrow">
-          {day === "today" ? "СЕГОДНЯ" : "ЗАВТРА"}
+          {day === "today"
+            ? "СЕГОДНЯ"
+            : "ЗАВТРА"}
         </span>
 
         <h1>
@@ -139,20 +192,24 @@ function Schedule({ user }: ScheduleProps) {
 
       {!loading && !error && schedule && (
         <>
-          {day === "today" && schedule.list.length > 0 && (
-            <TodayOverview
-              currentLesson={currentLesson}
-              nextLesson={nextLesson}
-              lessonsFinished={lessonsFinished}
-            />
-          )}
+          {day === "today" &&
+            schedule.list.length > 0 && (
+              <TodayOverview
+                currentLesson={currentLesson}
+                nextLesson={nextLesson}
+                lessonsFinished={lessonsFinished}
+              />
+            )}
 
           {schedule.list.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">☕</div>
+              <div className="empty-icon">
+                ☕
+              </div>
 
-              <h2>Сегодня занятий нет</h2>
-
+              <h2>
+                Сегодня занятий нет
+              </h2>
             </div>
           ) : (
             <div className="schedule-section">
@@ -161,8 +218,13 @@ function Schedule({ user }: ScheduleProps) {
                   <LessonCard
                     key={`${lesson.number}-${lesson.timeStart}`}
                     lesson={lesson}
-                    isCurrent={day === "today" && currentLesson === lesson}
-                    isToday={day === "today"}
+                    isCurrent={
+                      day === "today" &&
+                      currentLesson === lesson
+                    }
+                    isToday={
+                      day === "today"
+                    }
                   />
                 ))}
               </div>
@@ -171,9 +233,14 @@ function Schedule({ user }: ScheduleProps) {
 
           <button
             className="week-button"
-            onClick={() => setShowWeek(true)}
-            >
-            <span>Расписание на неделю</span>
+            onClick={() =>
+              setShowWeek(true)
+            }
+          >
+            <span>
+              Расписание на неделю
+            </span>
+
             <span>→</span>
           </button>
         </>
@@ -200,8 +267,9 @@ function TodayOverview({
           СЕГОДНЯ
         </div>
 
-        <h2>Пары на сегодня закончились</h2>
-        
+        <h2>
+          Пары на сегодня закончились
+        </h2>
       </section>
     );
   }
@@ -215,13 +283,18 @@ function TodayOverview({
             СЕЙЧАС ИДЁТ
           </div>
 
-          <h2>{currentLesson.disciplines}</h2>
+          <h2>
+            {currentLesson.disciplines}
+          </h2>
 
           <div className="overview-time">
-            {currentLesson.timeStart} — {currentLesson.timeEnd}
+            {currentLesson.timeStart} —{" "}
+            {currentLesson.timeEnd}
           </div>
 
-          <LessonMeta lesson={currentLesson} />
+          <LessonMeta
+            lesson={currentLesson}
+          />
         </div>
       ) : (
         <div className="overview-block break">
@@ -231,7 +304,9 @@ function TodayOverview({
 
           <h2>Перерыв</h2>
 
-          <p>Сейчас занятий нет.</p>
+          <p>
+            Сейчас занятий нет.
+          </p>
         </div>
       )}
 
@@ -241,13 +316,18 @@ function TodayOverview({
             СЛЕДУЮЩАЯ
           </div>
 
-          <h2>{nextLesson.disciplines}</h2>
+          <h2>
+            {nextLesson.disciplines}
+          </h2>
 
           <div className="overview-time">
-            {nextLesson.timeStart} — {nextLesson.timeEnd}
+            {nextLesson.timeStart} —{" "}
+            {nextLesson.timeEnd}
           </div>
 
-          <LessonMeta lesson={nextLesson} />
+          <LessonMeta
+            lesson={nextLesson}
+          />
         </div>
       )}
     </section>
@@ -266,7 +346,9 @@ function LessonCard({
   isToday,
 }: LessonCardProps) {
   const finished =
-    isToday && !isCurrent && isLessonFinished(lesson);
+    isToday &&
+    !isCurrent &&
+    isLessonFinished(lesson);
 
   return (
     <article
@@ -279,8 +361,13 @@ function LessonCard({
         .join(" ")}
     >
       <div className="lesson-time">
-        <strong>{lesson.timeStart}</strong>
-        <span>{lesson.timeEnd}</span>
+        <strong>
+          {lesson.timeStart}
+        </strong>
+
+        <span>
+          {lesson.timeEnd}
+        </span>
       </div>
 
       <div className="lesson-info">
@@ -288,19 +375,31 @@ function LessonCard({
           Пара {lesson.number}
         </div>
 
-        <h2>{lesson.disciplines}</h2>
+        <h2>
+          {lesson.disciplines}
+        </h2>
 
-        <LessonMeta lesson={lesson} />
+        <LessonMeta
+          lesson={lesson}
+        />
       </div>
 
       <div className="lesson-status">
-        {isCurrent ? "Сейчас" : finished ? "✓" : ""}
+        {isCurrent
+          ? "Сейчас"
+          : finished
+            ? "✓"
+            : ""}
       </div>
     </article>
   );
 }
 
-function LessonMeta({ lesson }: { lesson: Lesson }) {
+function LessonMeta({
+  lesson,
+}: {
+  lesson: Lesson;
+}) {
   return (
     <div className="lesson-meta">
       {lesson.types && (
@@ -308,7 +407,9 @@ function LessonMeta({ lesson }: { lesson: Lesson }) {
       )}
 
       {lesson.auditorium && (
-        <span>{lesson.auditorium}</span>
+        <span>
+          {lesson.auditorium}
+        </span>
       )}
 
       {lesson.corpus && (
@@ -329,30 +430,48 @@ function parseTime(time: string) {
 function getCurrentMinutes() {
   const now = new Date();
 
-  return now.getHours() * 60 + now.getMinutes();
+  return (
+    now.getHours() * 60 +
+    now.getMinutes()
+  );
 }
 
-function isLessonCurrent(lesson: Lesson) {
+function isLessonCurrent(
+  lesson: Lesson,
+) {
   const now = getCurrentMinutes();
 
-  const start = parseTime(lesson.timeStart);
-  const end = parseTime(lesson.timeEnd);
+  const start = parseTime(
+    lesson.timeStart,
+  );
+
+  const end = parseTime(
+    lesson.timeEnd,
+  );
 
   return now >= start && now < end;
 }
 
-function isLessonUpcoming(lesson: Lesson) {
+function isLessonUpcoming(
+  lesson: Lesson,
+) {
   const now = getCurrentMinutes();
 
-  const start = parseTime(lesson.timeStart);
+  const start = parseTime(
+    lesson.timeStart,
+  );
 
   return start > now;
 }
 
-function isLessonFinished(lesson: Lesson) {
+function isLessonFinished(
+  lesson: Lesson,
+) {
   const now = getCurrentMinutes();
 
-  const end = parseTime(lesson.timeEnd);
+  const end = parseTime(
+    lesson.timeEnd,
+  );
 
   return now >= end;
 }
@@ -360,15 +479,20 @@ function isLessonFinished(lesson: Lesson) {
 function formatDate(date: string) {
   const parsed = new Date(date);
 
-  if (Number.isNaN(parsed.getTime())) {
+  if (
+    Number.isNaN(parsed.getTime())
+  ) {
     return date;
   }
 
-  return parsed.toLocaleDateString("ru-RU", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  return parsed.toLocaleDateString(
+    "ru-RU",
+    {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    },
+  );
 }
 
 export default Schedule;
