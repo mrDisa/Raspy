@@ -1,73 +1,95 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/mrDisa/Raspy/backend/internal/model"
 )
 
-var ErrUserNotFound = errors.New("user not found")
 
-type PostgresUserRepository struct {
-    db *sql.DB
+
+type UserRepository struct {
+	db *sql.DB
 }
 
-func NewPostgresUserRepository(db *sql.DB) *PostgresUserRepository {
-    return &PostgresUserRepository{db: db}
+func NewUserRepository(db *sql.DB) *UserRepository {
+	return &UserRepository{
+		db: db,
+	}
 }
 
-type UserRepository interface {
-    FindByTelegramID(telegramID int64) (model.User, error)
-	Create(telegramID int64, groupID *int, subgroup model.Subgroup) (model.User, error)
-}
+func (r *UserRepository) FindByTelegramID(telegramID int64) (*model.User, error) {
+	const query = `
+		SELECT id, telegram_id, group_id, subgroup,
+		       notifications_enabled, created_at, updated_at
+		FROM users
+		WHERE telegram_id = $1
+	`
 
-func (r *PostgresUserRepository) FindByTelegramID(telegramID int64) (model.User, error) {
-    var user model.User
+	var user model.User
 
-    query := `SELECT id, telegram_id, group_id, subgroup, notifications_enabled, created_at, updated_at
-              FROM users WHERE telegram_id = $1`
-
-    err := r.db.QueryRow(query, telegramID).Scan(
-        &user.ID,
-        &user.TelegramID,
+	err := r.db.QueryRowContext(
+		context.Background(),
+		query,
+		telegramID,
+	).Scan(
+		&user.ID,
+		&user.TelegramID,
 		&user.GroupID,
 		&user.Subgroup,
 		&user.NotificationsEnabled,
 		&user.CreatedAt,
 		&user.UpdatedAt,
-    )
-    if err != nil {
-        if errors.Is(err, sql.ErrNoRows) {
-			return model.User{}, fmt.Errorf("telegram_id: %d %w",telegramID, ErrUserNotFound)
-		}
-        return model.User{}, err
-    }
+	)
 
-    return user, nil
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+
+		return nil, fmt.Errorf("failed to find user: %w", err)
+	}
+
+	return &user, nil
 }
 
-func (r *PostgresUserRepository) Create(telegramID int64, groupID *int, subgroup model.Subgroup) (model.User, error) {
-    query := `INSERT INTO users (telegram_id, group_id, subgroup)
-              VALUES ($1, $2, $3)
-              RETURNING id, notifications_enabled, created_at, updated_at`
+func (r *UserRepository) Create(ctx context.Context, user *model.User) (*model.User, error) {
+	const query = `
+		INSERT INTO users (
+			telegram_id,
+			group_id,
+			subgroup,
+			notifications_enabled
+		)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, telegram_id, group_id, subgroup,
+		          notifications_enabled, created_at, updated_at
+	`
 
-    user := model.User{
-        TelegramID: telegramID,
-        GroupID:    groupID,
-        Subgroup:   subgroup,
-    }
+	var createdUser model.User
 
-    err := r.db.QueryRow(query, telegramID, groupID, subgroup).Scan(
-        &user.ID,
-        &user.NotificationsEnabled,
-        &user.CreatedAt,
-        &user.UpdatedAt,
-    )
-    if err != nil {
-        return model.User{}, fmt.Errorf("failed to create user: %w", err)
-    }
+	err := r.db.QueryRowContext(
+		context.Background(),
+		query,
+		user.TelegramID,
+		user.GroupID,
+		user.Subgroup,
+		user.NotificationsEnabled,
+	).Scan(
+		&createdUser.ID,
+		&createdUser.TelegramID,
+		&createdUser.GroupID,
+		&createdUser.Subgroup,
+		&createdUser.NotificationsEnabled,
+		&createdUser.CreatedAt,
+		&createdUser.UpdatedAt,
+	)
 
-    return user, nil
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	return &createdUser, nil
 }
