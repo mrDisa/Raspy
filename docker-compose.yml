@@ -19,7 +19,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://raspy:${POSTGRES_PASSWORD}@postgres:5432/raspy?sslmode=disable
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      BOT_TOKEN: ${BOT_TOKEN}
     depends_on:
       - postgres
     networks:
@@ -31,18 +31,11 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      BOT_TOKEN: ${BOT_TOKEN}
+      WEB_APP_URL: ${WEB_APP_URL}
       BACKEND_URL: http://backend:3000
     depends_on:
       - backend
-    networks:
-      - internal
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    restart: unless-stopped
     networks:
       - internal
 
