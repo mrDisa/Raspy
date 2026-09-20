@@ -17,6 +17,7 @@ import type {
 interface ScheduleProps {
   user: User;
   onUserUpdate: (user: User) => void;
+  initialScreen?: "schedule" | "settings" | "group";
 }
 
 type Day = "today" | "tomorrow";
@@ -24,6 +25,7 @@ type Day = "today" | "tomorrow";
 function Schedule({
   user,
   onUserUpdate,
+  initialScreen = "schedule",
 }: ScheduleProps) {
   const [day, setDay] = useState<Day>("today");
   const [schedule, setSchedule] =
@@ -33,7 +35,7 @@ function Schedule({
     useState<string | null>(null);
   const [showWeek, setShowWeek] = useState(false);
   const [showSettings, setShowSettings] =
-    useState(false);
+    useState(initialScreen !== "schedule");
 
   useEffect(() => {
     async function loadSchedule() {
@@ -105,6 +107,7 @@ function Schedule({
         user={user}
         onBack={() => setShowSettings(false)}
         onUserUpdate={onUserUpdate}
+        initialGroupPicker={initialScreen === "group"}
       />
     );
   }

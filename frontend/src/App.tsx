@@ -5,6 +5,16 @@ import type { User } from "./types/api";
 
 import Schedule from "./pages/Schedule/Schedule";
 
+type InitialScreen = "schedule" | "settings" | "group";
+
+function getInitialScreen(): InitialScreen {
+  const screen = new URLSearchParams(window.location.search).get("screen");
+
+  return screen === "settings" || screen === "group"
+    ? screen
+    : "schedule";
+}
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +72,7 @@ function App() {
     <Schedule
       user={user}
       onUserUpdate={setUser}
+      initialScreen={getInitialScreen()}
     />
   </div>
 );

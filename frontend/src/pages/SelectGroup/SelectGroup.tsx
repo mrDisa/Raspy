@@ -20,7 +20,6 @@ function SelectGroup({ onSelect }: SelectGroupProps) {
     const query = search.trim();
 
     if (!query) {
-        setGroups([]);
         return;
     }
 

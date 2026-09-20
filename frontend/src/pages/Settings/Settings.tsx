@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 import {
   updateGroup,
-  updateNotifications,
 } from "../../api/user";
 
 import { getGroups } from "../../api/groups";
@@ -16,12 +15,14 @@ interface SettingsProps {
   user: User;
   onBack: () => void;
   onUserUpdate: (user: User) => void;
+  initialGroupPicker?: boolean;
 }
 
 function Settings({
   user,
   onBack,
   onUserUpdate,
+  initialGroupPicker = false,
 }: SettingsProps) {
   const [loading, setLoading] =
     useState(false);
@@ -30,7 +31,7 @@ function Settings({
     useState<string | null>(null);
 
   const [showGroupPicker, setShowGroupPicker] =
-    useState(false);
+    useState(initialGroupPicker);
 
   const [groupQuery, setGroupQuery] =
     useState("");
@@ -47,7 +48,6 @@ function Settings({
     }
 
     if (groupQuery.trim().length < 2) {
-      setGroups([]);
       return;
     }
 
@@ -144,35 +144,6 @@ function Settings({
         err instanceof Error
           ? err.message
           : "Не удалось изменить подгруппу",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleNotificationsToggle() {
-    if (loading) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const updatedUser =
-        await updateNotifications(
-          !user.NotificationsEnabled,
-        );
-
-      onUserUpdate({
-        ...updatedUser,
-        Group: user.Group,
-      });
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Не удалось изменить настройки уведомлений",
       );
     } finally {
       setLoading(false);
@@ -352,41 +323,6 @@ function Settings({
               }
             >
               2-я подгруппа
-            </button>
-          </div>
-        </div>
-
-        <div className="settings-section">
-          <div className="settings-section-title">
-            Уведомления
-          </div>
-
-          <div className="settings-row">
-            <div>
-              <span className="settings-row-title">
-                Изменения расписания
-              </span>
-
-              <span className="settings-row-value">
-                Получать уведомления в Telegram
-              </span>
-            </div>
-
-            <button
-              className={[
-                "settings-toggle",
-                user.NotificationsEnabled
-                  ? "active"
-                  : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              disabled={loading}
-              onClick={
-                handleNotificationsToggle
-              }
-            >
-              <span />
             </button>
           </div>
         </div>
