@@ -8,6 +8,7 @@ type User struct {
 	ID 						int
 	TelegramID 				int64
 	GroupID					*int
+	Group                   *Group
 	Subgroup 				Subgroup
 	NotificationsEnabled 	bool
 	CreatedAt 				time.Time

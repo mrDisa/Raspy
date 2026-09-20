@@ -46,18 +46,27 @@ func (s *ScheduleService) getFilteredSchedule(group string, subgroup model.Subgr
 }
 
 func (s *ScheduleService) getScheduleForDate(group string, subgroup model.Subgroup, date time.Time) (model.ScheduleDay, error) {
-	schedule, err := s.getFilteredSchedule(group, subgroup, nil)
+	loc, err := time.LoadLocation("Europe/Moscow")
+    if err != nil {
+        return model.ScheduleDay{}, fmt.Errorf(
+            "failed to load timezone: %w",
+            err,
+        )
+    }
+	targetDate := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, loc)
+
+	schedule, err := s.getFilteredSchedule(group, subgroup, &targetDate)
 	if err != nil {
 		return model.ScheduleDay{}, fmt.Errorf("failed to get schedule: %w", err)
 	}
 
-	targetDate := date.Format("2006-01-02")
+	targetDateString := targetDate.Format("2006-01-02")
 	for _, day := range schedule {
-		if day.Date == targetDate {
+		if day.Date == targetDateString {
 			return day, nil
 		}
 	}
-	return model.ScheduleDay{}, fmt.Errorf("schedule for %s not found", targetDate)
+	return model.ScheduleDay{Date: targetDateString, List: []model.Lesson{}}, nil
 }
 
 func (s *ScheduleService) GetTodaySchedule(group string, subgroup model.Subgroup) (model.ScheduleDay, error) {

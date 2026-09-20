@@ -109,7 +109,7 @@ func main() {
 			r.Use(auth.Middleware(userRepo, botToken))
 		}
 
-		r.Get("/me", handler.Me)
+		r.Get("/me", handler.Me(groupRepo))
 
 		r.Get("/groups", groupHandler.List)
 

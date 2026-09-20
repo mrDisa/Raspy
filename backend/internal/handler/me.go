@@ -14,19 +14,48 @@ type UpdateGroupRequest struct {
     Subgroup model.Subgroup `json:"subgroup"`
 }
 
-func Me(w http.ResponseWriter, r *http.Request) {
-	user, ok := auth.UserFromContext(r.Context())
-	if !ok {
-		http.Error(w, "user not found", http.StatusUnauthorized)
-		return
-	}
+func Me(groupRepo *repository.GroupRepository) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        user, ok := auth.UserFromContext(r.Context())
+        if !ok {
+            http.Error(
+                w,
+                "user not found",
+                http.StatusUnauthorized,
+            )
+            return
+        }
 
-	w.Header().Set("Content-Type", "application/json")
+        if user.GroupID != nil {
+            group, err := groupRepo.FindByID(
+                r.Context(),
+                *user.GroupID,
+            )
+            if err != nil {
+                http.Error(
+                    w,
+                    "failed to get group",
+                    http.StatusInternalServerError,
+                )
+                return
+            }
 
-	if err := json.NewEncoder(w).Encode(user); err != nil {
-		http.Error(w, "failed to encode response", http.StatusInternalServerError)
-		return
-	}
+            user.Group = group
+        }
+
+        w.Header().Set(
+            "Content-Type",
+            "application/json",
+        )
+
+        if err := json.NewEncoder(w).Encode(user); err != nil {
+            http.Error(
+                w,
+                "failed to encode response",
+                http.StatusInternalServerError,
+            )
+        }
+    }
 }
 
 func UpdateGroup(userRepo *repository.UserRepository, groupRepo *repository.GroupRepository) http.HandlerFunc {
