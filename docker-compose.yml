@@ -38,6 +38,14 @@ services:
       - backend
     networks:
       - internal
+      
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - internal
 
   nginx:
     image: nginx:alpine
