@@ -24,7 +24,17 @@ services:
       - postgres
     networks:
       - internal
-
+  xray:
+    image: teddysun/xray
+    restart: unless-stopped
+    ports:
+      - "1080:1080"
+    volumes:
+      - ./xray/config.json:/etc/xray/config.json:ro
+    networks:
+      - internal
+    entrypoint: ["xray"]
+    command: ["run", "-config", "/etc/xray/config.json"]
   bot:
     build:
       context: ./bot
@@ -34,11 +44,13 @@ services:
       BOT_TOKEN: ${BOT_TOKEN}
       WEB_APP_URL: ${WEB_APP_URL}
       BACKEND_URL: http://backend:3000
+      PROXY_URL: socks5://xray:1080
     depends_on:
       - backend
+      - xray
     networks:
       - internal
-      
+
   frontend:
     build:
       context: ./frontend

@@ -12,6 +12,7 @@ from aiogram.types import (
     ReplyKeyboardRemove,
     WebAppInfo,
 )
+from aiogram.client.session.aiohttp import AiohttpSession
 from dotenv import load_dotenv
 
 
@@ -19,7 +20,7 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 WEB_APP_URL = os.getenv("WEB_APP_URL")
-
+PROXY_URL = os.getenv("PROXY_URL")
 
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN is not set")
@@ -94,7 +95,8 @@ async def help_command(message: Message):
 
 
 async def main():
-    bot = Bot(token=BOT_TOKEN)
+    session = AiohttpSession(proxy=PROXY_URL) if PROXY_URL else None
+    bot = Bot(token=BOT_TOKEN, session=session)
 
     dp = Dispatcher()
     dp.include_router(router)
