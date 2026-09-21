@@ -2,17 +2,20 @@
 
 > **Your college schedule, without the routine of checking it.**
 
-Raspy is a Telegram Mini App for students that provides a personalized college schedule based on their group and subgroup.
+**Raspy** is a Telegram Mini App for students that provides a personalized college schedule based on their group and subgroup.
 
-Instead of manually opening the college schedule every day, a student can open Raspy directly from Telegram and immediately see what classes are happening today, tomorrow, or during the current week.
+Instead of manually opening the college schedule every day, students can open Raspy directly from Telegram and instantly see their schedule for today, tomorrow, or the current week.
 
-The main goal of the project is to go one step further than a simple schedule viewer: **Raspy is designed to detect schedule changes and notify students about them automatically.**
+### 🚀 Try Raspy
+
+**[Open Raspy in Telegram](https://t.me/@raspy_smk_bot)**
+
 
 ---
 
 ## Features
 
-### Schedule
+### 📅 Schedule
 
 - Today's schedule
 - Tomorrow's schedule
@@ -23,16 +26,16 @@ The main goal of the project is to go one step further than a simple schedule vi
 - Subgroup-aware schedule filtering
 - Automatic timezone handling
 
-### Personalization
+### 👤 Personalization
 
 - Telegram-based authentication
 - Automatic user creation
-- College group selection with search
-- Subgroup selection
+- College group search
+- Group and subgroup selection
 - Persistent user settings
 - Notification preferences
 
-### Telegram Mini App
+### 📱 Telegram Mini App
 
 - Runs directly inside Telegram
 - No separate account registration
@@ -40,7 +43,7 @@ The main goal of the project is to go one step further than a simple schedule vi
 - Mobile-first interface
 - Schedule and settings available from one application
 
-### Backend
+### ⚙️ Backend
 
 - REST API built with Go
 - Layered architecture
@@ -51,19 +54,14 @@ The main goal of the project is to go one step further than a simple schedule vi
 - Telegram authentication middleware
 - Request validation and error handling
 
-### Planned
+### 🤖 Telegram Bot
 
-- Automatic schedule change detection
-- Telegram notifications about schedule changes:
-  - cancelled classes
-  - added classes
-  - changed classrooms
-  - changed teachers
-  - changed time
-  - changed subjects
-- Background workers for schedule synchronization
-- Production deployment
-- Automated tests and CI/CD
+The bot acts as the entry point to the Mini App.
+
+- `/start` — open the main menu
+- `/schedule` — open the schedule
+- `/help` — show available commands
+- Telegram Web App integration
 
 ---
 
@@ -109,7 +107,7 @@ Raspy follows a client-server architecture where the Go backend acts as the cent
 
 ### Authentication flow
 
-Raspy uses Telegram Mini App `initData` to identify users.
+Raspy uses Telegram Mini App `initData` to authenticate users.
 
 ```text
 Telegram
@@ -132,7 +130,7 @@ Go Backend
       PostgreSQL
 ```
 
-The backend remains responsible for authentication and user identity. The frontend never sends a Telegram user ID as a trusted identity source.
+The backend is responsible for authentication and user identity. The frontend never sends a Telegram user ID as a trusted identity source.
 
 ---
 
@@ -159,6 +157,7 @@ Raspy/
 │   └── go.sum
 │
 ├── bot/
+│   ├── main.py
 │   └── ...
 │
 ├── frontend/
@@ -174,7 +173,7 @@ Raspy/
 └── README.md
 ```
 
-The backend is intentionally separated into layers:
+The backend follows a layered architecture:
 
 ```text
 HTTP Handler
@@ -191,7 +190,7 @@ HTTP Handler
  PostgreSQL
 ```
 
-This keeps HTTP, business logic, persistence and external API integration independent from each other.
+This keeps HTTP handling, business logic, persistence, and external API integration separated.
 
 ---
 
@@ -210,7 +209,7 @@ This keeps HTTP, business logic, persistence and external API integration indepe
 - **React**
 - **TypeScript**
 - **Vite**
-- Telegram Mini Apps API
+- **Telegram Mini Apps API**
 
 ### Bot
 
@@ -219,9 +218,11 @@ This keeps HTTP, business logic, persistence and external API integration indepe
 
 ### Infrastructure
 
-- Docker
-- Docker Compose
-- ngrok for local Telegram Mini App development
+- **Docker**
+- **Docker Compose**
+- **nginx**
+- **HTTPS**
+- **ngrok** for local Telegram Mini App development
 
 ---
 
@@ -235,13 +236,13 @@ The backend exposes a REST API under:
 
 ### Authentication
 
-Telegram authentication is performed using:
+Authenticated requests use:
 
 ```http
 X-Telegram-Init-Data: <telegram-init-data>
 ```
 
-The backend validates the data before processing authenticated requests.
+The backend validates Telegram's signed `initData` before processing the request.
 
 ### User
 
@@ -251,7 +252,7 @@ GET /api/v1/me
 
 Returns the currently authenticated user and their selected group/subgroup.
 
-### Group selection
+### Group search
 
 ```http
 GET /api/v1/groups?q=<query>
@@ -265,7 +266,13 @@ Example:
 GET /api/v1/groups?q=КИС-24
 ```
 
-The backend requests matching groups from the college API and persists the selected groups in PostgreSQL.
+### Group selection
+
+```http
+PUT /api/v1/me/group
+```
+
+Updates the authenticated user's group and subgroup.
 
 ### Schedule
 
@@ -276,7 +283,7 @@ GET /api/v1/schedule/week
 GET /api/v1/schedule/week/next
 ```
 
-Schedule requests use the authenticated user's group and subgroup.
+Schedule requests use the authenticated user's selected group and subgroup.
 
 ---
 
@@ -308,37 +315,33 @@ The core database entities are users and groups.
 └──────────────┘
 ```
 
-A group is identified internally by its PostgreSQL ID while `external_id` stores the identifier used by the college API.
+A group is identified internally by its PostgreSQL ID, while `external_id` stores the identifier used by the college API.
 
 ---
 
 ## External College API
 
-Raspy integrates with the college's schedule API instead of maintaining a separate copy of the entire schedule.
+Raspy integrates with the college schedule API instead of maintaining a separate copy of the entire schedule.
 
-The backend contains a dedicated client responsible for communicating with the external service.
+The backend contains a dedicated client responsible for communication with the external service.
 
 ```text
 ScheduleService
        │
        ▼
- CollegeAPI Client
+ College API Client
        │
        ▼
  College Schedule API
 ```
 
-This keeps external API details outside the business logic.
-
-The backend can then transform and filter the received schedule according to the authenticated user's group and subgroup.
+The service layer filters the received schedule according to the authenticated user's group and subgroup.
 
 ---
 
 ## Local Development
 
 ### Requirements
-
-Make sure you have:
 
 - Go
 - Node.js
@@ -360,10 +363,10 @@ cd Raspy
 ```bash
 cd backend
 go mod download
-go run ./...
+go run ./cmd/server
 ```
 
-The development server runs on:
+The backend runs on:
 
 ```text
 http://localhost:3000
@@ -383,8 +386,6 @@ By default, Vite runs on:
 http://localhost:5173
 ```
 
-The frontend proxies `/api` requests to the Go backend during local development.
-
 ### Bot
 
 ```bash
@@ -393,23 +394,70 @@ pip install -r requirements.txt
 python main.py
 ```
 
-The bot is responsible for launching the Telegram Mini App.
+The bot launches the Telegram Mini App and provides the main entry point for users.
 
 ---
 
 ## Environment Variables
 
-Create the required `.env` files locally.
+The backend uses environment variables for configuration.
 
-Example backend configuration:
+Example:
 
 ```env
 DATABASE_URL=postgres://user:password@localhost:5432/raspy
-TELEGRAM_BOT_TOKEN=your_bot_token
-DEV_MODE=true
+BOT_TOKEN=your_bot_token
 ```
 
-Never commit real credentials, bot tokens or database passwords to the repository.
+The bot uses:
+
+```env
+BOT_TOKEN=your_bot_token
+WEB_APP_URL=https://your-mini-app-url
+PROXY_URL=optional-proxy-url
+```
+
+Never commit real credentials, bot tokens, or database passwords to the repository.
+
+---
+
+## Production
+
+Raspy is deployed as a containerized application using Docker Compose.
+
+```text
+                    Internet
+                       │
+                       ▼
+                  ┌─────────┐
+                  │  nginx  │
+                  │ HTTPS   │
+                  └────┬────┘
+                       │
+              ┌────────┴────────┐
+              │                 │
+              ▼                 ▼
+        ┌───────────┐     ┌───────────┐
+        │ Frontend  │     │  Backend  │
+        │ React     │     │    Go     │
+        └───────────┘     └─────┬─────┘
+                                │
+                                ▼
+                         ┌────────────┐
+                         │ PostgreSQL │
+                         └────────────┘
+```
+
+The production environment includes:
+
+- Docker Compose
+- Go backend
+- React frontend
+- PostgreSQL
+- nginx reverse proxy
+- HTTPS
+- Telegram Bot
+- external college schedule API
 
 ---
 
@@ -417,7 +465,7 @@ Never commit real credentials, bot tokens or database passwords to the repositor
 
 Telegram Mini Apps require an HTTPS URL when opened from Telegram.
 
-For local development, the project can be exposed through a tunnel such as ngrok:
+For local development, the application can be exposed through a tunnel such as ngrok:
 
 ```text
 Telegram
@@ -433,13 +481,11 @@ Vite :5173
 Go :3000
 ```
 
-This makes it possible to test the real Telegram authentication flow locally instead of relying only on mocked data.
+This allows testing the real Telegram authentication flow during development.
 
 ---
 
 ## Design Principles
-
-Raspy is being developed with several engineering principles in mind:
 
 ### Separation of concerns
 
@@ -452,7 +498,7 @@ Handler → Service → Repository
 
 ### Explicit dependencies
 
-Services receive their dependencies through constructors rather than creating them internally.
+Services receive dependencies through constructors rather than creating them internally.
 
 ### Thin handlers
 
@@ -469,7 +515,7 @@ College API-specific logic lives inside the `collegeapi` package instead of leak
 
 ### Persistent user state
 
-The backend stores user-specific settings so the Mini App can remain personalized between sessions.
+The backend stores user-specific settings so the Mini App remains personalized between sessions.
 
 ---
 
@@ -493,24 +539,30 @@ The backend stores user-specific settings so the Mini App can remain personalize
 - [x] Subgroup selection
 - [x] Settings page
 
-### Phase 2 — Notifications
+### Phase 2 — Schedule intelligence
 
 - [ ] Schedule snapshots
 - [ ] Schedule comparison
-- [ ] Change detection
+- [ ] Automatic change detection
 - [ ] Background synchronization
+- [ ] Retry and error handling for background jobs
+
+### Phase 3 — Notifications
+
 - [ ] Telegram notifications
+- [ ] Cancelled class notifications
+- [ ] Added class notifications
+- [ ] Classroom change notifications
+- [ ] Teacher change notifications
+- [ ] Time change notifications
 - [ ] Notification preferences
-- [ ] Retry/error handling for background jobs
 
-### Phase 3 — Production
+### Phase 4 — Engineering
 
-- [ ] Production deployment
-- [ ] Dockerized production environment
-- [ ] HTTPS
-- [ ] CI/CD
 - [ ] Automated tests
-- [ ] Monitoring and logging
+- [ ] CI/CD
+- [ ] Monitoring
+- [ ] Production observability
 
 ---
 
@@ -521,13 +573,13 @@ College schedules are often inconvenient to use:
 - information is spread across different interfaces;
 - students repeatedly check the same schedule;
 - schedule changes can be easy to miss;
-- the interface is not necessarily designed around a student's daily workflow.
+- existing interfaces are not always designed around a student's daily workflow.
 
-Raspy focuses on one simple idea:
+Raspy focuses on a simple idea:
 
 > **The student should not have to check the schedule. The schedule should come to the student.**
 
-The Telegram Mini App is only the interface. The long-term goal is a backend service that continuously tracks the student's schedule and proactively informs them about relevant changes.
+The Telegram Mini App is the interface. The long-term goal is a backend service that continuously tracks a student's schedule and proactively informs them about relevant changes.
 
 ---
 
@@ -535,7 +587,18 @@ The Telegram Mini App is only the interface. The long-term goal is a backend ser
 
 Raspy is currently under active development.
 
-The core schedule functionality and personalized user flow are implemented. The next major engineering milestone is automatic schedule change detection and Telegram notifications.
+The core personalized schedule experience is implemented and deployed:
+
+- Telegram authentication
+- group and subgroup selection
+- personalized schedules
+- today's, tomorrow's, and weekly schedules
+- Telegram Mini App
+- production Docker deployment
+- HTTPS
+- PostgreSQL persistence
+
+The next major milestone is automatic schedule change detection and Telegram notifications.
 
 ---
 
