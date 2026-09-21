@@ -2,6 +2,7 @@ import asyncio
 import os
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+from aiohttp import web
 from aiogram import Bot, Dispatcher, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.types import (
@@ -33,6 +34,19 @@ if not WEB_APP_URL.startswith("https://"):
 
 
 router = Router()
+
+async def health(request):
+    return web.Response(text="ok")
+
+
+async def run_web_server():
+    app = web.Application()
+    app.router.add_get("/", health)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.getenv("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
 
 
 def web_app_url(screen: str | None = None) -> str:
@@ -112,7 +126,10 @@ async def main():
 
     print("Bot started")
 
-    await dp.start_polling(bot)
+    await asyncio.gather(
+        dp.start_polling(bot),
+        run_web_server(),
+    )
 
 
 if __name__ == "__main__":
